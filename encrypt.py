@@ -4,6 +4,7 @@ from Crypto.Cipher import AES
 import os
 import struct
 from Crypto import Random
+import PyQt5.QtCore as QtCore
 
 
 def encrypt_file(key: bytes | str, in_filename: str, out_filename: str | None = None, chunk_size: int = 64 * 1024):
@@ -54,14 +55,16 @@ def encrypt_file(key: bytes | str, in_filename: str, out_filename: str | None = 
                 outfile.write(encryptor.encrypt(chunk))
 
 
-def encrypt_files(files: Iterable[str], password1: str, password2: str, out_filepath: str):
-    command = f'''7z a -t7z encrypted.7z "{'" "'.join(files)}" -p"{password1}"'''
-    code = subprocess.call(command)
+class EncryptionWorker(QtCore.QObject):
+    finished = QtCore.pyqtSignal()
+    progress = QtCore.pyqtSignal(int)
 
-    print("7z exited with code: " + str(code))
+    def encrypt_files(self, files: Iterable[str], password1: str, password2: str, out_filepath: str):
+        command = f'''7z a -t7z encrypted.7z "{'" "'.join(files)}" -p"{password1}"'''
+        subprocess.call(command)
 
-    encrypt_file(password2, "encrypted.7z", out_filepath)
-    print("Files encrypted. Cleaning up")
+        encrypt_file(password2, "encrypted.7z", out_filepath)
 
-    os.remove("encrypted.7z")
-    # print(code)
+        os.remove("encrypted.7z")
+
+        self.finished.emit()

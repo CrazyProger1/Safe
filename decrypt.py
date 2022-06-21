@@ -5,6 +5,8 @@ import struct
 from Crypto import Random
 import subprocess
 import string
+from PyQt5 import QtCore, QtGui, QtWidgets
+import PyQt5.QtCore as QtCore
 
 
 def decrypt_file(key: str | bytes, in_filename: str, out_filename: str | None = None, chunk_size: int = 64 * 1024):
@@ -36,13 +38,19 @@ def decrypt_file(key: str | bytes, in_filename: str, out_filename: str | None = 
             outfile.truncate(original_size)
 
 
-def decrypt_files(encrypted_filepath: str, password1: str, password2: str, extraction_dir: str):
-    if extraction_dir in string.ascii_uppercase:
-        extraction_dir += ":/"
+class DecryptionWorker(QtCore.QObject):
+    finished = QtCore.pyqtSignal()
+    progress = QtCore.pyqtSignal(int)
 
-    decrypt_file(password2, encrypted_filepath, "encrypted.7z")
-    command = f'''7z e -t7z encrypted.7z -o"{extraction_dir}" -p"{password1}"'''
-    code = subprocess.call(command)
-    print("7z exited with code: " + str(code))
-    os.remove("encrypted.7z")
-    print("Decrypted")
+    def decrypt_files(self, encrypted_filepath: str, password1: str | bytes, password2: str | bytes,
+                      extraction_dir: str):
+        if extraction_dir in string.ascii_uppercase:
+            extraction_dir += ":/"
+
+        decrypt_file(password2, encrypted_filepath, "encrypted.7z")
+        command = f'''7z e -t7z encrypted.7z -o"{extraction_dir}" -p"{password1}"'''
+        subprocess.call(command)
+
+        os.remove("encrypted.7z")
+
+        self.finished.emit()

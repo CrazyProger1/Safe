@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from styles import *
 from config import *
-from encrypt import encrypt_files
+from encrypt import *
 import threading
 
 
@@ -19,6 +19,8 @@ class EncryptDialogUI(QtWidgets.QDialog):
         self.btn_select_out_file: None | QtWidgets.QPushButton = None
         self.btn_encrypt: None | QtWidgets.QPushButton = None
         self.btn_select_out_pwd_file: None | QtWidgets.QPushButton = None
+        self.encryption_thread: None | QtCore.QThread = None
+        self.encryption_worker: None | EncryptionWorker = None
 
         self.output_filepath = ""
         self.output_password_filepath = ""
@@ -129,12 +131,23 @@ class EncryptDialogUI(QtWidgets.QDialog):
         for index in range(self.lst_file_list.count()):
             files.append(self.lst_file_list.item(index).text())
 
-        threading.Thread(
-            target=encrypt_files,
-            args=[files, password1, password2, self.output_filepath],
-            kwargs={}
-        ).start()
-        # encrypt_files(files, password1, password2, self.output_filepath)
+        self.encryption_thread = QtCore.QThread()
+        self.encryption_worker = EncryptionWorker()
+
+        self.encryption_worker.moveToThread(self.encryption_thread)
+        self.encryption_worker.finished.connect(self.encryption_thread.quit)
+
+        self.encryption_thread.started.connect(
+            lambda: self.encryption_worker.encrypt_files(files, password1, password2, self.output_filepath)
+        )
+
+        self.encryption_thread.start()
+
+        window = QtWidgets.QDialog()
+        window.setWindowIcon(QtGui.QIcon("resources/logo.ico"))
+        self.encryption_thread.finished.connect(
+            lambda: QtWidgets.QMessageBox.information(window, "Safe", "Files encrypted", QtWidgets.QMessageBox.Ok)
+        )
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate

@@ -2,8 +2,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from styles import *
 from config import *
 from encrypt import encrypt_files
-from decrypt import decrypt_files
+from decrypt import *
 import threading
+import PyQt5.QtCore as QtCore
 
 
 class DecryptDialogUI(QtWidgets.QDialog):
@@ -15,6 +16,8 @@ class DecryptDialogUI(QtWidgets.QDialog):
         self.txt_password1: None | QtWidgets.QLabel = None
         self.btn_decrypt: None | QtWidgets.QPushButton = None
         self.btn_select_extraction_dir: None | QtWidgets.QPushButton = None
+        self.decryption_thread: None | QtCore.QThread = None
+        self.decryption_worker: None | DecryptionWorker = None
 
         self.encrypted_filepath = ""
         self.password2 = b""
@@ -65,11 +68,27 @@ class DecryptDialogUI(QtWidgets.QDialog):
 
     def decrypt(self):
         password1 = self.edit_password1.text()
-        threading.Thread(
-            target=decrypt_files,
-            args=[self.encrypted_filepath, password1, self.password2, self.extraction_dir],
-            kwargs={}
-        ).start()
+        self.decryption_thread = QtCore.QThread()
+        self.decryption_worker = DecryptionWorker()
+
+        self.decryption_worker.moveToThread(self.decryption_thread)
+        self.decryption_worker.finished.connect(self.decryption_thread.quit)
+
+        self.decryption_thread.started.connect(
+            lambda: self.decryption_worker.decrypt_files(
+                self.encrypted_filepath,
+                password1,
+                self.password2,
+                self.extraction_dir)
+        )
+
+        self.decryption_thread.start()
+
+        window = QtWidgets.QDialog()
+        window.setWindowIcon(QtGui.QIcon("resources/logo.ico"))
+        self.decryption_thread.finished.connect(
+            lambda: QtWidgets.QMessageBox.information(window, "Safe", "Files decrypted", QtWidgets.QMessageBox.Ok)
+        )
 
     def select_extraction_dir(self):
         self.extraction_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a directory", "/")[0]
