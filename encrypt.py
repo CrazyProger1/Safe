@@ -54,7 +54,6 @@ def encrypt_file(key: bytes | str, in_filename: str, out_filename: str | None = 
                 outfile.write(encryptor.encrypt(chunk))
 
 
-
 def encrypt_files(files: Iterable[str], password1: str, password2: str, out_filepath: str):
     command = f'''7z a -t7z encrypted.7z "{'" "'.join(files)}" -p"{password1}"'''
     code = subprocess.call(command)

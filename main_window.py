@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from decrypt_dialog import *
 from encrypt_dialog import *
 from config import *
 from styles import *
@@ -13,10 +13,10 @@ class MainWindowUI(QtWidgets.QMainWindow):
         self.btn_decrypt: None | QtWidgets.QPushButton = None
         self.btn_encrypt: None | QtWidgets.QPushButton = None
         self.encrypt_dialog: None | EncryptDialogUI = None
+        self.decrypt_dialog: None | DecryptDialogUI = None
         self.setup()
 
     def setup(self):
-
         self.setObjectName("main_window")
         self.setFixedSize(479, 183)
         self.setStyleSheet(MAIN_WINDOW_STYLE)
@@ -50,7 +50,8 @@ class MainWindowUI(QtWidgets.QMainWindow):
         self.encrypt_dialog.show()
 
     def decrypt(self):
-        pass
+        self.decrypt_dialog = DecryptDialogUI()
+        self.decrypt_dialog.show()
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
