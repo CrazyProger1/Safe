@@ -119,7 +119,7 @@ class EncryptDialogUI(QtWidgets.QDialog):
         self.output_password_filepath = QtWidgets.QFileDialog.getSaveFileName(
             self,
             "Select an output password file",
-            "/"
+            "/", filter="*.pwd"
         )[0]
 
     def encrypt(self):

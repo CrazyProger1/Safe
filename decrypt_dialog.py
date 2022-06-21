@@ -2,95 +2,99 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from styles import *
 from config import *
 from encrypt import encrypt_files
+from decrypt import decrypt_files
 import threading
 
 
 class DecryptDialogUI(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
+        self.btn_select_pwd_file: None | QtWidgets.QPushButton = None
+        self.btn_select_encrypted_file: None | QtWidgets.QPushButton = None
+        self.edit_password1: None | QtWidgets.QLineEdit = None
+        self.txt_password1: None | QtWidgets.QLabel = None
+        self.btn_decrypt: None | QtWidgets.QPushButton = None
+        self.btn_select_extraction_dir: None | QtWidgets.QPushButton = None
+
+        self.encrypted_filepath = ""
+        self.password2 = b""
+        self.extraction_dir = ""
+
         self.setup()
 
     def setup(self):
         self.setObjectName("decrypt_dialog")
-        self.setFixedSize(477, 170)
-        self.setStyleSheet("QPushButton{\n"
-                           "    \n"
-                           "    background-color: rgb(0, 0, 0);\n"
-                           "    color: rgb(0, 255, 0);\n"
-                           "\n"
-                           "\n"
-                           "}\n"
-                           "\n"
-                           "\n"
-                           "\n"
-                           "\n"
-                           "QLabel{\n"
-                           "    color: rgb(0, 255, 0);\n"
-                           "}\n"
-                           "\n"
-                           "\n"
-                           "QWidget#decrypt_dialog{\n"
-                           "    background-color: rgb(0, 0, 0);\n"
-                           "}\n"
-                           "\n"
-                           "QPushButton:hover{\n"
-                           "    border: 1px solid rgb(0, 255, 0);\n"
-                           "}\n"
-                           "\n"
-                           "QPushButton:pressed{\n"
-                           "    \n"
-                           "    background-color: rgb(130, 130, 130);\n"
-                           "}\n"
-                           "\n"
-                           "QLineEdit{\n"
-                           "    \n"
-                           "    background-color: rgb(0, 0, 0);\n"
-                           "    border: 1px dashed rgb(255, 255, 255);\n"
-                           "    color: rgb(0, 255, 0);\n"
-                           "    \n"
-                           "}\n"
-                           "\n"
-                           "QLineEdit:hover{\n"
-                           "    border: 1px solid rgb(255, 255, 255);\n"
-                           "}\n"
-                           "\n"
-                           "\n"
-                           "QListWidget{\n"
-                           "    color: rgb(0, 255, 0);\n"
-                           "    background-color: rgb(0, 0, 0);\n"
-                           "    font: 8pt \"Segoe Print\";\n"
-                           "    border: 1px dashed rgb(255, 255, 255);\n"
-                           "\n"
-                           "}\n"
-                           "\n"
-                           "")
-        self.pushButton = QtWidgets.QPushButton(self)
-        self.pushButton.setGeometry(QtCore.QRect(250, 10, 221, 41))
-        self.pushButton.setStyleSheet("font: 8pt \"Segoe Print\";")
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(self)
-        self.pushButton_2.setGeometry(QtCore.QRect(10, 10, 221, 41))
-        self.pushButton_2.setStyleSheet("font: 8pt \"Segoe Print\";")
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.lineEdit = QtWidgets.QLineEdit(self)
-        self.lineEdit.setGeometry(QtCore.QRect(10, 80, 461, 22))
-        self.lineEdit.setObjectName("lineEdit")
-        self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(QtCore.QRect(10, 60, 81, 16))
-        self.label.setStyleSheet("font: 8pt \"Segoe Print\";")
-        self.label.setObjectName("label")
-        self.btn_encrypt = QtWidgets.QPushButton(self)
-        self.btn_encrypt.setGeometry(QtCore.QRect(10, 110, 461, 51))
-        self.btn_encrypt.setStyleSheet("font: 8pt \"Segoe Print\";")
-        self.btn_encrypt.setObjectName("btn_encrypt")
+        self.resize(481, 240)
+        self.setStyleSheet(DECRYPT_DIALOG_STYLE)
+
+        self.btn_select_pwd_file = QtWidgets.QPushButton(self)
+        self.btn_select_pwd_file.setGeometry(QtCore.QRect(250, 10, 221, 41))
+        self.btn_select_pwd_file.setStyleSheet(TEXT_STYLE)
+        self.btn_select_pwd_file.setObjectName("btn_select_pwd_file")
+        self.btn_select_pwd_file.clicked.connect(self.select_pwd_file)
+
+        self.btn_select_encrypted_file = QtWidgets.QPushButton(self)
+        self.btn_select_encrypted_file.setGeometry(QtCore.QRect(10, 10, 221, 41))
+        self.btn_select_encrypted_file.setStyleSheet(TEXT_STYLE)
+        self.btn_select_encrypted_file.setObjectName("btn_select_encrypted_file")
+        self.btn_select_encrypted_file.clicked.connect(self.select_encrypted_file)
+
+        self.edit_password1 = QtWidgets.QLineEdit(self)
+        self.edit_password1.setGeometry(QtCore.QRect(10, 150, 461, 22))
+        self.edit_password1.setObjectName("edit_password1")
+
+        self.txt_password1 = QtWidgets.QLabel(self)
+        self.txt_password1.setGeometry(QtCore.QRect(10, 130, 81, 16))
+        self.txt_password1.setStyleSheet(TEXT_STYLE)
+        self.txt_password1.setObjectName("txt_password1")
+
+        self.btn_decrypt = QtWidgets.QPushButton(self)
+        self.btn_decrypt.setGeometry(QtCore.QRect(10, 180, 461, 51))
+        self.btn_decrypt.setStyleSheet(TEXT_STYLE)
+        self.btn_decrypt.setObjectName("btn_decrypt")
+        self.btn_decrypt.clicked.connect(self.decrypt)
+
+        self.btn_select_extraction_dir = QtWidgets.QPushButton(self)
+        self.btn_select_extraction_dir.setGeometry(QtCore.QRect(10, 70, 461, 41))
+        self.btn_select_extraction_dir.setStyleSheet(TEXT_STYLE)
+        self.btn_select_extraction_dir.setObjectName("btn_select_extraction_dir")
+        self.btn_select_extraction_dir.clicked.connect(self.select_extraction_dir)
 
         self.retranslate_ui()
         QtCore.QMetaObject.connectSlotsByName(self)
 
+    def decrypt(self):
+        password1 = self.edit_password1.text()
+        threading.Thread(
+            target=decrypt_files,
+            args=[self.encrypted_filepath, password1, self.password2, self.extraction_dir],
+            kwargs={}
+        ).start()
+
+    def select_extraction_dir(self):
+        self.extraction_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a directory", "/")[0]
+
+    def select_encrypted_file(self):
+        self.encrypted_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "/", filter="*.sf")[0]
+
+    def select_pwd_file(self):
+        password2_file = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Select a password file",
+            "/",
+            filter="*.pwd"
+        )[0]
+
+        with open(password2_file, "rb") as pwd2file:
+            self.password2 = pwd2file.read()
+
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
+        self.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
         self.setWindowTitle(_translate("decrypt_dialog", "Dialog"))
-        self.pushButton.setText(_translate("decrypt_dialog", "Select password file"))
-        self.pushButton_2.setText(_translate("decrypt_dialog", "Select encrypted file"))
-        self.label.setText(_translate("decrypt_dialog", "Password 1"))
-        self.btn_encrypt.setText(_translate("decrypt_dialog", "Encrypt"))
+        self.btn_select_pwd_file.setText(_translate("decrypt_dialog", "Select password file"))
+        self.btn_select_encrypted_file.setText(_translate("decrypt_dialog", "Select encrypted file"))
+        self.setWindowTitle(_translate("decrypt_dialog", f"Safe V{VERSION} - decryption"))
+        self.txt_password1.setText(_translate("decrypt_dialog", "Password 1"))
+        self.btn_decrypt.setText(_translate("decrypt_dialog", "Decrypt"))
+        self.btn_select_extraction_dir.setText(_translate("decrypt_dialog", "Select extraction directory"))
