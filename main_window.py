@@ -1,22 +1,27 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from encrypt_dialog import *
 from config import *
 from styles import *
 
 
-class MainWindowUI(object):
+class MainWindowUI(QtWidgets.QMainWindow):
     def __init__(self):
+        super().__init__()
         self.central_widget: None | QtWidgets.QWidget = None
         self.version_info: None | QtWidgets.QLabel = None
         self.btn_decrypt: None | QtWidgets.QPushButton = None
         self.btn_encrypt: None | QtWidgets.QPushButton = None
+        self.encrypt_dialog: None | EncryptDialogUI = None
+        self.setup()
 
-    def setup(self, main_window: QtWidgets.QWidget):
-        main_window.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
-        main_window.setObjectName("MainWindow")
-        main_window.setFixedSize(479, 183)
-        main_window.setStyleSheet(MAIN_WINDOW_STYLE)
+    def setup(self):
 
-        self.central_widget = QtWidgets.QWidget(main_window)
+        self.setObjectName("main_window")
+        self.setFixedSize(479, 183)
+        self.setStyleSheet(MAIN_WINDOW_STYLE)
+
+        self.central_widget = QtWidgets.QWidget(self)
         self.central_widget.setObjectName("centralwidget")
 
         self.version_info = QtWidgets.QLabel(self.central_widget)
@@ -36,18 +41,21 @@ class MainWindowUI(object):
         self.btn_encrypt.setObjectName("btn_encrypt")
         self.btn_encrypt.clicked.connect(self.encrypt)
 
-        self.retranslate_ui(main_window)
-        QtCore.QMetaObject.connectSlotsByName(main_window)
+        self.setCentralWidget(self.central_widget)
+        self.retranslate_ui()
+        QtCore.QMetaObject.connectSlotsByName(self)
 
     def encrypt(self):
-        print("encrypt")
+        self.encrypt_dialog = EncryptDialogUI()
+        self.encrypt_dialog.show()
 
     def decrypt(self):
-        print("decrypt")
+        pass
 
-    def retranslate_ui(self, main_window):
+    def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        main_window.setWindowTitle(_translate("MainWindow", f"Safe V{VERSION}"))
-        self.version_info.setText(_translate("MainWindow", f"Safe V{VERSION} by crazyproger1"))
-        self.btn_decrypt.setText(_translate("MainWindow", "Decrypt"))
-        self.btn_encrypt.setText(_translate("MainWindow", "Encrypt"))
+        self.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
+        self.setWindowTitle(_translate("main_window", f"Safe V{VERSION}"))
+        self.version_info.setText(_translate("main_window", f"Safe V{VERSION} by crazyproger1"))
+        self.btn_decrypt.setText(_translate("main_window", "Decrypt"))
+        self.btn_encrypt.setText(_translate("main_window", "Encrypt"))
