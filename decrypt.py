@@ -5,7 +5,7 @@ import struct
 from Crypto import Random
 import subprocess
 import string
-from PyQt5 import QtCore, QtGui, QtWidgets
+from message_boxes import *
 import PyQt5.QtCore as QtCore
 
 
@@ -40,17 +40,26 @@ def decrypt_file(key: str | bytes, in_filename: str, out_filename: str | None = 
 
 class DecryptionWorker(QtCore.QObject):
     finished = QtCore.pyqtSignal()
-    progress = QtCore.pyqtSignal(int)
+    code = QtCore.pyqtSignal(int)
 
     def decrypt_files(self, encrypted_filepath: str, password1: str | bytes, password2: str | bytes,
                       extraction_dir: str):
+
         if extraction_dir in string.ascii_uppercase:
             extraction_dir += ":/"
 
         decrypt_file(password2, encrypted_filepath, "encrypted.7z")
-        command = f'''7z e -t7z encrypted.7z -o"{extraction_dir}" -p"{password1}"'''
-        subprocess.call(command)
+        command = f'''7z e -t7z encrypted.7z -o"{extraction_dir}" -p"{password1}" -y'''
+        code = subprocess.call(command)
 
-        os.remove("encrypted.7z")
+        if code == 2:
+            show_critical("Some password is wrong")
+            self.code.emit(1)
+            self.finished.emit()
+            return
 
+        if os.path.exists("encrypted.7z"):
+            os.remove("encrypted.7z")
+
+        self.code.emit(0)
         self.finished.emit()

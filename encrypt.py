@@ -34,10 +34,8 @@ def encrypt_file(key: bytes | str, in_filename: str, out_filename: str | None = 
     if type(key) is str:
         key = key.encode("utf-8")
 
-    # iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
     iv = Random.new().read(AES.block_size)
     encryptor = AES.new(key, AES.MODE_CBC, iv)
-    # 1234567890qwertyuiopasdfghjklzxc
     file_size = os.path.getsize(in_filename)
 
     with open(in_filename, 'rb') as infile:
@@ -60,7 +58,7 @@ class EncryptionWorker(QtCore.QObject):
     progress = QtCore.pyqtSignal(int)
 
     def encrypt_files(self, files: Iterable[str], password1: str, password2: str, out_filepath: str):
-        command = f'''7z a -t7z encrypted.7z "{'" "'.join(files)}" -p"{password1}"'''
+        command = f'''7z a -t7z encrypted.7z "{'" "'.join(files)}" -p"{password1}" -y'''
         subprocess.call(command)
 
         encrypt_file(password2, "encrypted.7z", out_filepath)

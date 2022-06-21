@@ -1,10 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from styles import *
 from config import *
-from encrypt import encrypt_files
 from decrypt import *
+
 import threading
-import PyQt5.QtCore as QtCore
 
 
 class DecryptDialogUI(QtWidgets.QDialog):
@@ -22,6 +21,8 @@ class DecryptDialogUI(QtWidgets.QDialog):
         self.encrypted_filepath = ""
         self.password2 = b""
         self.extraction_dir = ""
+
+        self.worker_code = 0
 
         self.setup()
 
@@ -66,7 +67,24 @@ class DecryptDialogUI(QtWidgets.QDialog):
         self.retranslate_ui()
         QtCore.QMetaObject.connectSlotsByName(self)
 
+    def check_values(self):
+        password1 = self.edit_password1.text()
+
+        if self.encrypted_filepath == "":
+            show_critical("Specify the path to the encrypted file")
+        elif self.password2 == "":
+            show_critical("Specify the path to the password file")
+        elif self.extraction_dir == "":
+            show_critical("Specify the path to the extraction dir")
+        elif password1 == "":
+            show_critical("Enter the first password")
+
+        return True
+
     def decrypt(self):
+        if not self.check_values():
+            return
+
         password1 = self.edit_password1.text()
         self.decryption_thread = QtCore.QThread()
         self.decryption_worker = DecryptionWorker()
@@ -82,13 +100,26 @@ class DecryptDialogUI(QtWidgets.QDialog):
                 self.extraction_dir)
         )
 
+        self.decryption_worker.code.connect(self.set_worker_code)
+
         self.decryption_thread.start()
 
         window = QtWidgets.QDialog()
         window.setWindowIcon(QtGui.QIcon("resources/logo.ico"))
         self.decryption_thread.finished.connect(
-            lambda: QtWidgets.QMessageBox.information(window, "Safe", "Files decrypted", QtWidgets.QMessageBox.Ok)
+            self.handle_decryption_finish
         )
+
+    def handle_decryption_finish(self):
+        if self.worker_code == 0:
+            self.reject()
+            self.decryption_thread.quit()
+            show_info("Files decrypted")
+
+    def set_worker_code(self, code: int):
+        self.worker_code = code
+        if self.worker_code != 0:
+            self.decryption_thread.quit()
 
     def select_extraction_dir(self):
         self.extraction_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a directory", "/")[0]

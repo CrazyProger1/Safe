@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from message_boxes import *
 from styles import *
 from config import *
 from encrypt import *
-import threading
 
 
 class EncryptDialogUI(QtWidgets.QDialog):
@@ -124,10 +124,48 @@ class EncryptDialogUI(QtWidgets.QDialog):
             "/", filter="*.pwd"
         )[0]
 
-    def encrypt(self):
+    def check_values(self):
         password1 = self.edit_password1.text()
         password2 = self.edit_password2.text()
+
+        if password1 == "":
+            show_critical("Enter the first password")
+            return
+
+        elif password2 == "":
+            show_critical("Enter the second password")
+            return
+
+        elif len(password2) != 32:
+            show_critical(f"Length of password 2 must be 32. But its length is {len(password2)}")
+            return
+
+        elif self.lst_file_list.count() == 0:
+            show_critical("Add at least one file")
+            return
+
+        elif self.output_filepath == "":
+            show_critical("Specify the path to the output file")
+            return
+
+        elif self.output_password_filepath == "":
+            show_critical("Specify the path to the output password file")
+            return
+
+        return True
+
+    def encrypt(self):
+        if not self.check_values():
+            return
+
+        password1 = self.edit_password1.text()
+        password2 = self.edit_password2.text()
+
+        with open(self.output_password_filepath, "w") as pf:
+            pf.write(password2)
+
         files = []
+
         for index in range(self.lst_file_list.count()):
             files.append(self.lst_file_list.item(index).text())
 
@@ -146,7 +184,7 @@ class EncryptDialogUI(QtWidgets.QDialog):
         window = QtWidgets.QDialog()
         window.setWindowIcon(QtGui.QIcon("resources/logo.ico"))
         self.encryption_thread.finished.connect(
-            lambda: QtWidgets.QMessageBox.information(window, "Safe", "Files encrypted", QtWidgets.QMessageBox.Ok)
+            lambda: show_info("Files encrypted")
         )
 
     def retranslate_ui(self):
