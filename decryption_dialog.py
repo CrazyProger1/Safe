@@ -20,6 +20,7 @@ class DecryptionDialogUI(QtWidgets.QDialog):
 
         self.encrypted_filepath = filepath
         self.password2 = b""
+        self.password2_filepath = "/"
         self.extraction_dir = "/"
 
         self.worker_status = 0
@@ -171,22 +172,22 @@ class DecryptionDialogUI(QtWidgets.QDialog):
             self.btn_select_encrypted_file.setText(reduce_text(self.encrypted_filepath))
 
     def select_pwd_file(self):
-        password2_file = QtWidgets.QFileDialog.getOpenFileName(
+        self.password2_filepath = QtWidgets.QFileDialog.getOpenFileName(
             self,
             "Select a password file",
-            "/",
+            self.password2_filepath,
             filter="*.pwd"
         )[0]
 
-        if not password2_file:
+        if not self.password2_filepath:
             return
 
-        with open(password2_file, "rb") as pwd2file:
+        with open(self.password2_filepath, "rb") as pwd2file:
             self.password2 = pwd2file.read()
 
         if len(self.password2) != 32:
             show_critical(f"Length of the second password must be 32. But its length is {len(self.password2)}")
-            password2 = ""
+            self.password2 = ""
             return
 
         if self.password2:
