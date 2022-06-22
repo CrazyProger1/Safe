@@ -12,6 +12,7 @@ def main():
     else:
         main_window = MainWindowUI()
         main_window.show()
+
     app.exec()
 
 
