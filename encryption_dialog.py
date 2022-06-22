@@ -2,10 +2,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from message_boxes import *
 from styles import *
 from config import *
-from encrypt import *
+from encryption_worker import *
+from text import *
 
 
-class EncryptDialogUI(QtWidgets.QDialog):
+class EncryptionDialogUI(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
         self.btn_add_file: None | QtWidgets.QPushButton = None
@@ -22,8 +23,11 @@ class EncryptDialogUI(QtWidgets.QDialog):
         self.encryption_thread: None | QtCore.QThread = None
         self.encryption_worker: None | EncryptionWorker = None
 
-        self.output_filepath = ""
-        self.output_password_filepath = ""
+        self.output_filepath = "/"
+        self.output_password_filepath = "/"
+
+        self.worker_status = 0
+
         self.setup()
 
     def setup(self):
@@ -113,26 +117,33 @@ class EncryptDialogUI(QtWidgets.QDialog):
         self.output_filepath = QtWidgets.QFileDialog.getSaveFileName(
             self,
             "Select an output file",
-            "/",
+            self.output_filepath,
             filter="*.sf"
         )[0]
+
+        if self.output_filepath:
+            self.btn_select_out_file.setText(reduce_text(self.output_filepath))
 
     def select_output_password_file(self):
         self.output_password_filepath = QtWidgets.QFileDialog.getSaveFileName(
             self,
             "Select an output password file",
-            "/", filter="*.pwd"
+            self.output_password_filepath,
+            filter="*.pwd"
         )[0]
+
+        if self.output_password_filepath:
+            self.btn_select_out_pwd_file.setText(reduce_text(self.output_password_filepath))
 
     def check_values(self):
         password1 = self.edit_password1.text()
         password2 = self.edit_password2.text()
 
-        if password1 == "":
+        if not password1:
             show_critical("Enter the first password")
             return
 
-        elif password2 == "":
+        elif not password2:
             show_critical("Enter the second password")
             return
 
@@ -140,15 +151,15 @@ class EncryptDialogUI(QtWidgets.QDialog):
             show_critical(f"Length of password 2 must be 32. But its length is {len(password2)}")
             return
 
-        elif self.lst_file_list.count() == 0:
+        elif not self.lst_file_list.count():
             show_critical("Add at least one file")
             return
 
-        elif self.output_filepath == "":
+        elif self.output_filepath == "/" or not self.output_filepath:
             show_critical("Specify the path to the output file")
             return
 
-        elif self.output_password_filepath == "":
+        elif self.output_password_filepath == "/" or not self.output_password_filepath:
             show_critical("Specify the path to the output password file")
             return
 
@@ -179,13 +190,29 @@ class EncryptDialogUI(QtWidgets.QDialog):
             lambda: self.encryption_worker.encrypt_files(files, password1, password2, self.output_filepath)
         )
 
+        self.encryption_worker.status.connect(self.set_worker_status)
+
         self.encryption_thread.start()
 
         window = QtWidgets.QDialog()
         window.setWindowIcon(QtGui.QIcon("resources/logo.ico"))
-        self.encryption_thread.finished.connect(
-            lambda: show_info("Files encrypted")
-        )
+
+        self.encryption_thread.finished.connect(self.handle_encryption_finish)
+
+    def handle_encryption_finish(self):
+        if self.worker_status == 0:
+            self.reject()
+            self.encryption_thread.quit()
+            show_info("Files encrypted")
+
+    def set_worker_status(self, status: int):
+        self.worker_status = status
+
+        if status == 1:
+            show_critical("Something went wrong")
+
+        if self.worker_status != 0:
+            self.encryption_thread.quit()
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate

@@ -1,11 +1,17 @@
 from main_window import *
+from decryption_dialog import *
 import sys
 
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    main_window = MainWindowUI()
-    main_window.show()
+
+    if len(sys.argv) > 1:
+        decrypt_dialog = DecryptionDialogUI(sys.argv[1])
+        decrypt_dialog.show()
+    else:
+        main_window = MainWindowUI()
+        main_window.show()
     app.exec()
 
 

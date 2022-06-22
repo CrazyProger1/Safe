@@ -1,10 +1,7 @@
-from typing import Iterable
-import subprocess
 from Crypto.Cipher import AES
 import os
 import struct
 from Crypto import Random
-import PyQt5.QtCore as QtCore
 
 
 def encrypt_file(key: bytes | str, in_filename: str, out_filename: str | None = None, chunk_size: int = 64 * 1024):
@@ -51,18 +48,3 @@ def encrypt_file(key: bytes | str, in_filename: str, out_filename: str | None = 
                     chunk += ' '.encode() * (16 - len(chunk) % 16)
 
                 outfile.write(encryptor.encrypt(chunk))
-
-
-class EncryptionWorker(QtCore.QObject):
-    finished = QtCore.pyqtSignal()
-    progress = QtCore.pyqtSignal(int)
-
-    def encrypt_files(self, files: Iterable[str], password1: str, password2: str, out_filepath: str):
-        command = f'''7z a -t7z encrypted.7z "{'" "'.join(files)}" -p"{password1}" -y'''
-        subprocess.call(command)
-
-        encrypt_file(password2, "encrypted.7z", out_filepath)
-
-        os.remove("encrypted.7z")
-
-        self.finished.emit()

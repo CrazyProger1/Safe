@@ -1,13 +1,12 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from styles import *
 from config import *
-from decrypt import *
+from decryption_worker import *
+from text import *
 
-import threading
 
-
-class DecryptDialogUI(QtWidgets.QDialog):
-    def __init__(self):
+class DecryptionDialogUI(QtWidgets.QDialog):
+    def __init__(self, filepath: str | None = "/"):
         super().__init__()
         self.btn_select_pwd_file: None | QtWidgets.QPushButton = None
         self.btn_select_encrypted_file: None | QtWidgets.QPushButton = None
@@ -18,11 +17,11 @@ class DecryptDialogUI(QtWidgets.QDialog):
         self.decryption_thread: None | QtCore.QThread = None
         self.decryption_worker: None | DecryptionWorker = None
 
-        self.encrypted_filepath = ""
+        self.encrypted_filepath = filepath
         self.password2 = b""
-        self.extraction_dir = ""
+        self.extraction_dir = "/"
 
-        self.worker_code = 0
+        self.worker_status = 0
 
         self.setup()
 
@@ -70,14 +69,21 @@ class DecryptDialogUI(QtWidgets.QDialog):
     def check_values(self):
         password1 = self.edit_password1.text()
 
-        if self.encrypted_filepath == "":
+        if self.encrypted_filepath == "/" or not self.encrypted_filepath:
             show_critical("Specify the path to the encrypted file")
-        elif self.password2 == "":
+            return
+
+        elif not self.password2:
             show_critical("Specify the path to the password file")
-        elif self.extraction_dir == "":
+            return
+
+        elif self.extraction_dir == "/" or not self.extraction_dir:
             show_critical("Specify the path to the extraction dir")
-        elif password1 == "":
+            return
+
+        elif not password1:
             show_critical("Enter the first password")
+            return
 
         return True
 
@@ -100,7 +106,7 @@ class DecryptDialogUI(QtWidgets.QDialog):
                 self.extraction_dir)
         )
 
-        self.decryption_worker.code.connect(self.set_worker_code)
+        self.decryption_worker.status.connect(self.set_worker_status)
 
         self.decryption_thread.start()
 
@@ -111,21 +117,39 @@ class DecryptDialogUI(QtWidgets.QDialog):
         )
 
     def handle_decryption_finish(self):
-        if self.worker_code == 0:
+        if self.worker_status == 0:
             self.reject()
             self.decryption_thread.quit()
             show_info("Files decrypted")
 
-    def set_worker_code(self, code: int):
-        self.worker_code = code
-        if self.worker_code != 0:
+    def set_worker_status(self, status: int):
+        self.worker_status = status
+
+        if status == 1:
+            show_critical("Some password is wrong")
+
+        if self.worker_status != 0:
             self.decryption_thread.quit()
 
     def select_extraction_dir(self):
-        self.extraction_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a directory", "/")[0]
+        self.extraction_dir = QtWidgets.QFileDialog.getExistingDirectory(
+            self,
+            "Select a directory",
+            self.extraction_dir
+        )
+
+        if self.extraction_dir:
+            self.btn_select_extraction_dir.setText(reduce_text(self.extraction_dir))
 
     def select_encrypted_file(self):
-        self.encrypted_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "/", filter="*.sf")[0]
+        self.encrypted_filepath = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Select a file",
+            self.encrypted_filepath,
+            filter="*.sf")[0]
+
+        if self.encrypted_filepath:
+            self.btn_select_encrypted_file.setText(reduce_text(self.encrypted_filepath))
 
     def select_pwd_file(self):
         password2_file = QtWidgets.QFileDialog.getOpenFileName(
@@ -135,15 +159,24 @@ class DecryptDialogUI(QtWidgets.QDialog):
             filter="*.pwd"
         )[0]
 
+        if not password2_file:
+            return
+
         with open(password2_file, "rb") as pwd2file:
             self.password2 = pwd2file.read()
+
+        if self.password2:
+            self.btn_select_pwd_file.setText(reduce_text(self.password2.decode()))
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
         self.setWindowTitle(_translate("decrypt_dialog", "Dialog"))
         self.btn_select_pwd_file.setText(_translate("decrypt_dialog", "Select password file"))
-        self.btn_select_encrypted_file.setText(_translate("decrypt_dialog", "Select encrypted file"))
+        self.btn_select_encrypted_file.setText(_translate(
+            "decrypt_dialog",
+            "Select encrypted file"
+            if self.encrypted_filepath == "/" else reduce_text(self.encrypted_filepath)))
         self.setWindowTitle(_translate("decrypt_dialog", f"Safe V{VERSION} - decryption"))
         self.txt_password1.setText(_translate("decrypt_dialog", "Password 1"))
         self.btn_decrypt.setText(_translate("decrypt_dialog", "Decrypt"))

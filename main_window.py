@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from decrypt_dialog import *
-from encrypt_dialog import *
+from decryption_dialog import *
+from encryption_dialog import *
 from config import *
 from styles import *
 
@@ -12,8 +12,8 @@ class MainWindowUI(QtWidgets.QMainWindow):
         self.version_info: None | QtWidgets.QLabel = None
         self.btn_decrypt: None | QtWidgets.QPushButton = None
         self.btn_encrypt: None | QtWidgets.QPushButton = None
-        self.encrypt_dialog: None | EncryptDialogUI = None
-        self.decrypt_dialog: None | DecryptDialogUI = None
+        self.encrypt_dialog: None | EncryptionDialogUI = None
+        self.decrypt_dialog: None | DecryptionDialogUI = None
         self.setup()
 
     def setup(self):
@@ -46,11 +46,11 @@ class MainWindowUI(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def encrypt(self):
-        self.encrypt_dialog = EncryptDialogUI()
+        self.encrypt_dialog = EncryptionDialogUI()
         self.encrypt_dialog.show()
 
     def decrypt(self):
-        self.decrypt_dialog = DecryptDialogUI()
+        self.decrypt_dialog = DecryptionDialogUI()
         self.decrypt_dialog.show()
 
     def retranslate_ui(self):
