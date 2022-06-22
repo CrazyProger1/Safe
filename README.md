@@ -4,9 +4,12 @@
 
 # Safe
 
+<a href="https://github.com/CrazyProger1/Safe/releases/download/v0.1/SafeV0.1-setup.exe"><img alt="GitHub all releases" src="https://img.shields.io/github/downloads/CrazyProger1/Safe/total"></a>
+<a href="https://github.com/CrazyProger1/Safe/blob/master/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/CrazyProger1/Safe"></a>
+<a href="https://github.com/CrazyProger1/Safe/releases/latest"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/CrazyProger1/Safe"></a>
+
 Safe is a Windows application that allows you to encrypt private information using a two-step encryption algorithm using
 AES.
-
 
 ## License
 
