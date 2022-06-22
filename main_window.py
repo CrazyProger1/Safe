@@ -55,7 +55,7 @@ class MainWindowUI(QtWidgets.QMainWindow):
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
+        self.setWindowIcon(QtGui.QIcon(ICO_PATH))
         self.setWindowTitle(_translate("main_window", f"Safe V{VERSION}"))
         self.version_info.setText(_translate("main_window", f"Safe V{VERSION} by crazyproger1"))
         self.btn_decrypt.setText(_translate("main_window", "Decrypt"))

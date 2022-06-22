@@ -100,6 +100,9 @@ class EncryptionDialogUI(QtWidgets.QDialog):
 
     def add_file(self):
         filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "/")[0]
+        if not filepath:
+            return
+
         item = QtWidgets.QListWidgetItem()
         item.setText(filepath)
         self.lst_file_list.addItem(item)
@@ -194,9 +197,6 @@ class EncryptionDialogUI(QtWidgets.QDialog):
 
         self.encryption_thread.start()
 
-        window = QtWidgets.QDialog()
-        window.setWindowIcon(QtGui.QIcon("resources/logo.ico"))
-
         self.encryption_thread.finished.connect(self.handle_encryption_finish)
 
     def handle_encryption_finish(self):
@@ -216,7 +216,7 @@ class EncryptionDialogUI(QtWidgets.QDialog):
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
+        self.setWindowIcon(QtGui.QIcon(ICO_PATH))
         self.setWindowTitle(_translate("encrypt_dialog", "Dialog"))
         self.btn_add_file.setText(_translate("encrypt_dialog", "+ File"))
         self.btn_delete_file.setText(_translate("encrypt_dialog", "- File"))

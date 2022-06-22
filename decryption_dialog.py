@@ -195,7 +195,7 @@ class DecryptionDialogUI(QtWidgets.QDialog):
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowIcon(QtGui.QIcon('resources/logo.ico'))
+        self.setWindowIcon(QtGui.QIcon(ICO_PATH))
         self.setWindowTitle(_translate("decrypt_dialog", "Dialog"))
         self.btn_select_pwd_file.setText(_translate("decrypt_dialog", "Select password file"))
         self.btn_select_encrypted_file.setText(_translate(
