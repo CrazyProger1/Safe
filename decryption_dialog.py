@@ -3,6 +3,7 @@ from styles import *
 from config import *
 from decryption_worker import *
 from text import *
+import struct
 
 
 class DecryptionDialogUI(QtWidgets.QDialog):
@@ -66,7 +67,25 @@ class DecryptionDialogUI(QtWidgets.QDialog):
         self.retranslate_ui()
         QtCore.QMetaObject.connectSlotsByName(self)
 
+    def check_encrypted_file_format(self):
+        if os.stat(self.encrypted_filepath).st_size == 0:
+            show_critical("Encrypted file is empty")
+            return
+
+        try:
+            with open(self.encrypted_filepath, 'rb') as infile:
+                original_size = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
+                iv = infile.read(16)
+        except struct.error:
+            show_critical("The encrypted file has an invalid format")
+            return
+
+        return True
+
     def check_values(self):
+        if not self.check_encrypted_file_format():
+            return
+
         password1 = self.edit_password1.text()
 
         if self.encrypted_filepath == "/" or not self.encrypted_filepath:
@@ -164,6 +183,11 @@ class DecryptionDialogUI(QtWidgets.QDialog):
 
         with open(password2_file, "rb") as pwd2file:
             self.password2 = pwd2file.read()
+
+        if len(self.password2) != 32:
+            show_critical(f"Length of the second password must be 32. But its length is {len(self.password2)}")
+            password2 = ""
+            return
 
         if self.password2:
             self.btn_select_pwd_file.setText(reduce_text(self.password2.decode()))

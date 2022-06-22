@@ -148,7 +148,7 @@ class EncryptionDialogUI(QtWidgets.QDialog):
             return
 
         elif len(password2) != 32:
-            show_critical(f"Length of password 2 must be 32. But its length is {len(password2)}")
+            show_critical(f"Length of second password must be 32. But its length is {len(password2)}")
             return
 
         elif not self.lst_file_list.count():
