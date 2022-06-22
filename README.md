@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="D:\Programming\Python\Projects\Safe\resources\logo.ico" alt="Safe logo" width="128" height="128"/>
+  <img src="https://github.com/CrazyProger1/Safe/blob/master/resources/logo.ico" alt="Safe logo" width="128" height="128"/>
 </p>
 
 # Safe
